@@ -1,6 +1,6 @@
 const API_URL = 'https://6aaa41d4ff4dd5698b4e3bfd.mockapi.io/tour';
 
-function yeuCauApi(url, options = {}) {
+function requestAPI(url, options = {}) {
   return fetch(url, options).then(async response => {
     const data = await response.json().catch(() => null);
     if (!response.ok) {
@@ -69,7 +69,7 @@ class TourDuLich {
   }
 
   async taoTour() {
-    return yeuCauApi(API_URL, {
+    return requestAPI(API_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -85,7 +85,7 @@ class TourDuLich {
 
   async capNhatTour() {
     if (!this.tourID) throw new Error('Tour ID không hợp lệ');
-    return yeuCauApi(`${API_URL}/${this.tourID}`, {
+    return requestAPI(`${API_URL}/${this.tourID}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -101,7 +101,7 @@ class TourDuLich {
 
   async xoaTour() {
     if (!this.tourID) throw new Error('Tour ID không hợp lệ');
-    return yeuCauApi(`${API_URL}/${this.tourID}`, {
+    return requestAPI(`${API_URL}/${this.tourID}`, {
       method: 'DELETE'
     });
   }
@@ -132,7 +132,7 @@ function dinhDangNgayChoInput(dateStr) {
 async function taiDanhSachTour() {
   if (!container) return;
   try {
-    const data = await yeuCauApi(API_URL);
+    const data = await requestAPI(API_URL);
     tourList = data.map(item => new TourDuLich(item)).reverse();
     hienThiDanhSach();
   } catch (error) {
