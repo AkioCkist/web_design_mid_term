@@ -107,6 +107,13 @@ const searchInput = document.getElementById('searchInput');
 
 const editModal = document.getElementById('editModal');
 const editTourForm = document.getElementById('editTourForm');
+const confirmModal = document.getElementById('confirmModal');
+const confirmTitle = document.getElementById('confirmTitle');
+const confirmMessage = document.getElementById('confirmMessage');
+const confirmCancelBtn = document.getElementById('confirmCancelBtn');
+const confirmActionBtn = document.getElementById('confirmActionBtn');
+let pendingConfirmation = null;
+let lastFocusedElement = null;
 
 function toInputDateFormat(dateStr) {
   if (!dateStr) return '';
@@ -233,23 +240,91 @@ async function handleSaveUpdate(event) {
   }
 }
 
-async function handleDelete(id) {
+function openConfirmModal(type, id) {
   const tour = tourList.find(t => t.tourID == id);
-  if (tour && confirm(`Xác nhận xóa tour "${tour.tenTour}"?`)) {
-    await tour.xoaTour();
-    fetchTours();
-  }
+  if (!tour || !confirmModal) return;
+
+  pendingConfirmation = { type, id };
+  lastFocusedElement = document.activeElement;
+  confirmTitle.textContent = type === 'delete' ? 'Xóa tour?' : 'Xác nhận đặt tour';
+  confirmMessage.textContent = type === 'delete'
+    ? `Bạn có chắc muốn xóa tour "${tour.tenTour}" không?`
+    : `Bạn muốn đặt tour "${tour.tenTour}" với giá ${new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(tour.giaTour)}?`;
+  confirmActionBtn.textContent = type === 'delete' ? 'Xóa tour' : 'Đặt tour';
+  confirmActionBtn.classList.toggle('btn-danger', type === 'delete');
+  confirmActionBtn.disabled = false;
+  confirmActionBtn.onclick = confirmAction;
+  confirmCancelBtn.hidden = false;
+  confirmModal.style.display = 'flex';
+  confirmActionBtn.focus();
+}
+
+function handleDelete(id) {
+  openConfirmModal('delete', id);
 }
 
 function handleBook(id) {
-  const tour = tourList.find(t => t.tourID == id);
-  if (tour) {
-    alert(`Bạn đã chọn đặt tour:\n${tour.tenTour}\nGiá: ${new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(tour.giaTour)}`);
+  openConfirmModal('book', id);
+}
+
+function closeConfirmModal() {
+  if (!confirmModal) return;
+  confirmModal.style.display = 'none';
+  pendingConfirmation = null;
+  if (lastFocusedElement && typeof lastFocusedElement.focus === 'function') {
+    lastFocusedElement.focus();
   }
+}
+
+async function confirmAction() {
+  if (!pendingConfirmation) return;
+
+  const { type, id } = pendingConfirmation;
+  const tour = tourList.find(t => t.tourID == id);
+  if (!tour) {
+    closeConfirmModal();
+    return;
+  }
+
+  if (type === 'delete') {
+    confirmActionBtn.disabled = true;
+    confirmActionBtn.textContent = 'Đang xóa...';
+    try {
+      await tour.xoaTour();
+      closeConfirmModal();
+      fetchTours();
+    } catch (error) {
+      console.error('Lỗi khi xóa tour:', error);
+      confirmMessage.textContent = 'Không thể xóa tour. Vui lòng thử lại.';
+      confirmActionBtn.disabled = false;
+      confirmActionBtn.textContent = 'Xóa tour';
+    }
+    return;
+  }
+
+  pendingConfirmation = null;
+  confirmTitle.textContent = 'Đặt tour thành công';
+  confirmMessage.textContent = `Tour "${tour.tenTour}" đã được ghi nhận.`;
+  confirmActionBtn.textContent = 'Đóng';
+  confirmActionBtn.classList.remove('btn-danger');
+  confirmCancelBtn.hidden = true;
+  confirmActionBtn.onclick = closeConfirmModal;
 }
 
 if (tourForm) tourForm.addEventListener('submit', handleAdd);
 if (editTourForm) editTourForm.addEventListener('submit', handleSaveUpdate);
 if (searchInput) searchInput.addEventListener('input', handleSearch);
+
+document.addEventListener('keydown', event => {
+  if (event.key === 'Escape' && confirmModal?.style.display === 'flex') {
+    closeConfirmModal();
+  }
+});
+
+if (confirmModal) {
+  confirmModal.addEventListener('click', event => {
+    if (event.target === confirmModal) closeConfirmModal();
+  });
+}
 
 document.addEventListener('DOMContentLoaded', fetchTours);
