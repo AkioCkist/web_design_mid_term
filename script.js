@@ -1,5 +1,15 @@
 const API_URL = 'https://6aaa41d4ff4dd5698b4e3bfd.mockapi.io/tour';
 
+function requestApi(url, options = {}) {
+  return fetch(url, options).then(async response => {
+    const data = await response.json().catch(() => null);
+    if (!response.ok) {
+      throw new Error(data?.message || `API error: ${response.status}`);
+    }
+    return data;
+  });
+}
+
 class TourDuLich {
   constructor(data = {}) {
     this.tourID = data.id || data.tourID || null;
@@ -59,7 +69,7 @@ class TourDuLich {
   }
 
   async taoTour() {
-    const response = await fetch(API_URL, {
+    return requestApi(API_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -71,12 +81,11 @@ class TourDuLich {
         image: this.image
       })
     });
-    return await response.json();
   }
 
   async capNhatTour() {
-    if (!this.tourID) return;
-    const response = await fetch(`${API_URL}/${this.tourID}`, {
+    if (!this.tourID) throw new Error('Tour ID không hợp lệ');
+    return requestApi(`${API_URL}/${this.tourID}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -88,15 +97,13 @@ class TourDuLich {
         image: this.image
       })
     });
-    return await response.json();
   }
 
   async xoaTour() {
-    if (!this.tourID) return;
-    const response = await fetch(`${API_URL}/${this.tourID}`, {
+    if (!this.tourID) throw new Error('Tour ID không hợp lệ');
+    return requestApi(`${API_URL}/${this.tourID}`, {
       method: 'DELETE'
     });
-    return await response.json();
   }
 }
 
@@ -125,8 +132,7 @@ function toInputDateFormat(dateStr) {
 async function fetchTours() {
   if (!container) return;
   try {
-    const response = await fetch(API_URL);
-    const data = await response.json();
+    const data = await requestApi(API_URL);
     tourList = data.map(item => new TourDuLich(item)).reverse();
     render();
   } catch (error) {
@@ -191,7 +197,7 @@ async function handleAdd(event) {
   try {
     await newTour.taoTour();
     tourForm.reset();
-    fetchTours();
+    await fetchTours();
   } catch (error) {
     console.error('Lỗi khi tạo tour:', error);
     alert('Tạo tour thất bại!');
@@ -233,7 +239,7 @@ async function handleSaveUpdate(event) {
   try {
     await tour.capNhatTour();
     closeEditModal();
-    fetchTours();
+    await fetchTours();
   } catch (error) {
     console.error('Lỗi khi cập nhật tour:', error);
     alert('Cập nhật thất bại!');
@@ -292,7 +298,7 @@ async function confirmAction() {
     try {
       await tour.xoaTour();
       closeConfirmModal();
-      fetchTours();
+      await fetchTours();
     } catch (error) {
       console.error('Lỗi khi xóa tour:', error);
       confirmMessage.textContent = 'Không thể xóa tour. Vui lòng thử lại.';
