@@ -1,6 +1,6 @@
 const API_URL = 'https://6aaa41d4ff4dd5698b4e3bfd.mockapi.io/tour';
 
-function requestApi(url, options = {}) {
+function yeuCauApi(url, options = {}) {
   return fetch(url, options).then(async response => {
     const data = await response.json().catch(() => null);
     if (!response.ok) {
@@ -21,20 +21,20 @@ class TourDuLich {
     this.image = data.image || data.avatar || '';
   }
 
-  Show() {
+  HienThi() {
     const formattedPrice = new Intl.NumberFormat('vi-VN', {
       style: 'currency',
       currency: 'VND'
     }).format(this.giaTour);
 
-    const formatDate = (dateStr) => {
+    const dinhDangNgay = (dateStr) => {
       if (!dateStr) return '';
       const d = new Date(dateStr);
       if (isNaN(d.getTime())) return dateStr;
       return d.toLocaleDateString('vi-VN');
     };
 
-    const dateRange = `Từ ${formatDate(this.ngayKhoiHanh)} đến ${formatDate(this.ngayKetThuc)}`;
+    const dateRange = `Từ ${dinhDangNgay(this.ngayKhoiHanh)} đến ${dinhDangNgay(this.ngayKetThuc)}`;
     
     const isLongText = this.moTa.length > 80;
     const shortDesc = isLongText ? this.moTa.substring(0, 80) + '...' : this.moTa;
@@ -42,7 +42,7 @@ class TourDuLich {
     const descHTML = isLongText ? `
       <p class="tour-desc" id="desc-${this.tourID}">
         <span class="desc-text">${shortDesc}</span>
-        <button class="btn-toggle-desc" onclick="toggleDescription('${this.tourID}', \`${encodeURIComponent(this.moTa)}\`)">Xem thêm</button>
+         <button class="btn-toggle-desc" onclick="chuyenMoTa('${this.tourID}', \`${encodeURIComponent(this.moTa)}\`)">Xem thêm</button>
       </p>
     ` : `<p class="tour-desc">${this.moTa}</p>`;
 
@@ -69,7 +69,7 @@ class TourDuLich {
   }
 
   async taoTour() {
-    return requestApi(API_URL, {
+    return yeuCauApi(API_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -85,7 +85,7 @@ class TourDuLich {
 
   async capNhatTour() {
     if (!this.tourID) throw new Error('Tour ID không hợp lệ');
-    return requestApi(`${API_URL}/${this.tourID}`, {
+    return yeuCauApi(`${API_URL}/${this.tourID}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -101,7 +101,7 @@ class TourDuLich {
 
   async xoaTour() {
     if (!this.tourID) throw new Error('Tour ID không hợp lệ');
-    return requestApi(`${API_URL}/${this.tourID}`, {
+    return yeuCauApi(`${API_URL}/${this.tourID}`, {
       method: 'DELETE'
     });
   }
@@ -122,36 +122,36 @@ const confirmActionBtn = document.getElementById('confirmActionBtn');
 let pendingConfirmation = null;
 let lastFocusedElement = null;
 
-function toInputDateFormat(dateStr) {
+function dinhDangNgayChoInput(dateStr) {
   if (!dateStr) return '';
   const d = new Date(dateStr);
   if (isNaN(d.getTime())) return '';
   return d.toISOString().split('T')[0];
 }
 
-async function fetchTours() {
+async function taiDanhSachTour() {
   if (!container) return;
   try {
-    const data = await requestApi(API_URL);
+    const data = await yeuCauApi(API_URL);
     tourList = data.map(item => new TourDuLich(item)).reverse();
-    render();
+    hienThiDanhSach();
   } catch (error) {
     console.error('Lỗi tải dữ liệu:', error);
     container.innerHTML = '<p class="empty-state">Không thể tải dữ liệu từ API. Kiểm tra lại URL MockAPI.</p>';
   }
 }
 
-function render(filteredList = null) {
+function hienThiDanhSach(filteredList = null) {
   if (!container) return;
   const list = filteredList || tourList;
   if (list.length === 0) {
     container.innerHTML = '<p class="empty-state">Chưa có tour nào</p>';
     return;
   }
-  container.innerHTML = list.map(tour => tour.Show()).join('');
+  container.innerHTML = list.map(tour => tour.HienThi()).join('');
 }
 
-function toggleDescription(id, encodedFullText) {
+function chuyenMoTa(id, encodedFullText) {
   const descElem = document.getElementById(`desc-${id}`);
   if (!descElem) return;
 
@@ -172,7 +172,7 @@ function toggleDescription(id, encodedFullText) {
 function handleSearch() {
   const keyword = searchInput.value.trim().toLowerCase();
   if (!keyword) {
-    render();
+    hienThiDanhSach();
     return;
   }
   const filtered = tourList.filter(t =>
@@ -180,7 +180,7 @@ function handleSearch() {
     t.moTa.toLowerCase().includes(keyword) ||
     String(t.tourID).includes(keyword)
   );
-  render(filtered);
+  hienThiDanhSach(filtered);
 }
 
 async function handleAdd(event) {
@@ -197,7 +197,7 @@ async function handleAdd(event) {
   try {
     await newTour.taoTour();
     tourForm.reset();
-    await fetchTours();
+    await taiDanhSachTour();
   } catch (error) {
     console.error('Lỗi khi tạo tour:', error);
     alert('Tạo tour thất bại!');
@@ -212,14 +212,14 @@ function handleUpdate(id) {
   document.getElementById('editTenTour').value = tour.tenTour;
   document.getElementById('editImage').value = tour.image;
   document.getElementById('editMoTa').value = tour.moTa;
-  document.getElementById('editNgayKhoiHanh').value = toInputDateFormat(tour.ngayKhoiHanh);
-  document.getElementById('editNgayKetThuc').value = toInputDateFormat(tour.ngayKetThuc);
+  document.getElementById('editNgayKhoiHanh').value = dinhDangNgayChoInput(tour.ngayKhoiHanh);
+  document.getElementById('editNgayKetThuc').value = dinhDangNgayChoInput(tour.ngayKetThuc);
   document.getElementById('editGiaTour').value = tour.giaTour;
 
   if (editModal) editModal.style.display = 'flex';
 }
 
-function closeEditModal() {
+function dongModalCapNhat() {
   if (editModal) editModal.style.display = 'none';
 }
 
@@ -238,8 +238,8 @@ async function handleSaveUpdate(event) {
 
   try {
     await tour.capNhatTour();
-    closeEditModal();
-    await fetchTours();
+    dongModalCapNhat();
+    await taiDanhSachTour();
   } catch (error) {
     console.error('Lỗi khi cập nhật tour:', error);
     alert('Cập nhật thất bại!');
@@ -259,7 +259,7 @@ function openConfirmModal(type, id) {
   confirmActionBtn.textContent = type === 'delete' ? 'Xóa tour' : 'Đặt tour';
   confirmActionBtn.classList.toggle('btn-danger', type === 'delete');
   confirmActionBtn.disabled = false;
-  confirmActionBtn.onclick = confirmAction;
+  confirmActionBtn.onclick = xacNhanThaoTac;
   confirmCancelBtn.hidden = false;
   confirmModal.style.display = 'flex';
   confirmActionBtn.focus();
@@ -273,7 +273,7 @@ function handleBook(id) {
   openConfirmModal('book', id);
 }
 
-function closeConfirmModal() {
+function dongModalXacNhan() {
   if (!confirmModal) return;
   confirmModal.style.display = 'none';
   pendingConfirmation = null;
@@ -282,13 +282,13 @@ function closeConfirmModal() {
   }
 }
 
-async function confirmAction() {
+async function xacNhanThaoTac() {
   if (!pendingConfirmation) return;
 
   const { type, id } = pendingConfirmation;
   const tour = tourList.find(t => t.tourID == id);
   if (!tour) {
-    closeConfirmModal();
+    dongModalXacNhan();
     return;
   }
 
@@ -297,8 +297,8 @@ async function confirmAction() {
     confirmActionBtn.textContent = 'Đang xóa...';
     try {
       await tour.xoaTour();
-      closeConfirmModal();
-      await fetchTours();
+      dongModalXacNhan();
+      await taiDanhSachTour();
     } catch (error) {
       console.error('Lỗi khi xóa tour:', error);
       confirmMessage.textContent = 'Không thể xóa tour. Vui lòng thử lại.';
@@ -313,8 +313,7 @@ async function confirmAction() {
   confirmMessage.textContent = `Tour "${tour.tenTour}" đã được ghi nhận.`;
   confirmActionBtn.textContent = 'Đóng';
   confirmActionBtn.classList.remove('btn-danger');
-  confirmCancelBtn.hidden = true;
-  confirmActionBtn.onclick = closeConfirmModal;
+  confirmActionBtn.onclick = dongModalXacNhan;
 }
 
 if (tourForm) tourForm.addEventListener('submit', handleAdd);
@@ -323,14 +322,14 @@ if (searchInput) searchInput.addEventListener('input', handleSearch);
 
 document.addEventListener('keydown', event => {
   if (event.key === 'Escape' && confirmModal?.style.display === 'flex') {
-    closeConfirmModal();
+    dongModalXacNhan();
   }
 });
 
 if (confirmModal) {
   confirmModal.addEventListener('click', event => {
-    if (event.target === confirmModal) closeConfirmModal();
+    if (event.target === confirmModal) dongModalXacNhan();
   });
 }
 
-document.addEventListener('DOMContentLoaded', fetchTours);
+document.addEventListener('DOMContentLoaded', taiDanhSachTour);

@@ -258,6 +258,13 @@ body {
   display: flex;
   flex-direction: column;
   position: relative;
+  transition: transform 180ms ease-out, box-shadow 180ms ease-out;
+}
+
+.tour-card:hover,
+.tour-card:focus-within {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 18px rgba(13, 35, 58, 0.14);
 }
 
 .tour-img {
