@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quản Lý Sản Phẩm</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- Thanh công cụ phía trên -->
+  <div class="top-bar">
+    <h1 class="page-title">Danh Sách Sản Phẩm</h1>
+    <button id="openModalBtn" class="btn-primary">
+      <span>+</span> Add Product
+    </button>
+  </div>
+
+  <!-- Container hiển thị danh sách sản phẩm -->
+  <div id="productContainer" class="product-container"></div>
+
+  <!-- Modal Popup Form -->
+  <div id="productModal" class="modal-overlay hidden">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Add Product</h2>
+        <button id="closeModalBtn" class="close-btn">&times;</button>
+      </div>
+
+      <form id="productForm" class="modal-body">
+        <div class="form-group">
+          <label for="name">Tên sản phẩm</label>
+          <input type="text" id="name" placeholder="Nhập tên sản phẩm..." required />
+        </div>
+
+        <div class="form-group">
+          <label for="image">URL Hình ảnh</label>
+          <input type="url" id="image" placeholder="https://..." required />
+        </div>
+
+        <div class="form-group">
+          <label for="description">Mô tả sản phẩm</label>
+          <textarea id="description" rows="3" placeholder="Nhập mô tả ngắn..." required></textarea>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="quantity">Số lượng</label>
+            <input type="number" id="quantity" placeholder="0" min="1" required />
+          </div>
+
+          <div class="form-group">
+            <label for="price">Giá bán (VND)</label>
+            <input type="number" id="price" placeholder="0" min="0" required />
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" id="cancelBtn" class="btn-secondary">Hủy</button>
+          <button type="submit" id="submitBtn" class="btn-primary">Lưu sản phẩm</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
