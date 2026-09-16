@@ -49,7 +49,7 @@ class TourDuLich {
     return `
       <div class="tour-card" data-id="${this.tourID}">
         <img class="tour-img" src="${this.image}" alt="${this.tenTour}"
-          onerror="this.onerror=null;this.src='https://placehold.co/600x400?text=Khong+Tai+Duoc+Image+Huhu+Khong+Phai+Bug+Nha+Do+API'" /> 
+          onerror="this.onerror=null;this.src='https://placehold.co/1280x720?text=Khong+Tai+Duoc+Image+Huhu+Khong+Phai+Bug+Nha+Do+API&font=montserrat'" /> 
         <div class="tour-info">
           <div class="tour-header">
             <span class="tour-id">Tour ID ${this.tourID}</span>
