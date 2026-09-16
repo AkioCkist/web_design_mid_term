@@ -1,171 +1,255 @@
-const API_URL = 'https://6aa98c582d442cb69d49e688.mockapi.io/product'; 
+const API_URL = 'https://6aaa41d4ff4dd5698b4e3bfd.mockapi.io/tour';
 
-class Product {
+class TourDuLich {
   constructor(data = {}) {
-    this.id = data.id || null;
-    this.name = data.name || data.title || '';
-    this.image = data.image || '';
-    this.Description = data.Description || data.description || '';
-    this.quantity = Number(data.quantity) || 0;
-    this.Price = Number(data.price || data.Price) || 0;
+    this.tourID = data.id || data.tourID || null;
+    this.tenTour = data.tenTour || data.name || '';
+    this.moTa = data.moTa || data.description || '';
+    this.ngayKhoiHanh = data.ngayKhoiHanh || data.startDate || '';
+    this.ngayKetThuc = data.ngayKetThuc || data.endDate || '';
+    this.giaTour = Number(data.giaTour || data.price) || 0;
+    this.image = data.image || data.avatar || '';
   }
+
   Show() {
-    const formattedPrice = new Intl.NumberFormat('vi-VN', { 
-      style: 'currency', 
-      currency: 'VND' 
-    }).format(this.Price);
+    const formattedPrice = new Intl.NumberFormat('vi-VN', {
+      style: 'currency',
+      currency: 'VND'
+    }).format(this.giaTour);
+
+    const formatDate = (dateStr) => {
+      if (!dateStr) return '';
+      const d = new Date(dateStr);
+      if (isNaN(d.getTime())) return dateStr;
+      return d.toLocaleDateString('vi-VN');
+    };
+
+    const dateRange = `Từ ${formatDate(this.ngayKhoiHanh)} đến ${formatDate(this.ngayKetThuc)}`;
+    
+    const isLongText = this.moTa.length > 80;
+    const shortDesc = isLongText ? this.moTa.substring(0, 80) + '...' : this.moTa;
+    
+    const descHTML = isLongText ? `
+      <p class="tour-desc" id="desc-${this.tourID}">
+        <span class="desc-text">${shortDesc}</span>
+        <button class="btn-toggle-desc" onclick="toggleDescription('${this.tourID}', \`${encodeURIComponent(this.moTa)}\`)">Xem thêm</button>
+      </p>
+    ` : `<p class="tour-desc">${this.moTa}</p>`;
 
     return `
-      <div class="product-card" data-id="${this.id}">
-        <img class="main-img" src="${this.image}" alt="${this.name}" onerror="this.src='https://via.placeholder.com/300'" />
-        <div class="info">
-          <h3 class="title">${this.name}</h3>
-          <p class="description">${this.Description}</p>
-          <div class="price">${formattedPrice}</div>
-          <div class="meta">
-            <span>Số lượng: ${this.quantity}</span>
+      <div class="tour-card" data-id="${this.tourID}">
+        <img class="tour-img" src="${this.image}" alt="${this.tenTour}"
+          onerror="this.onerror=null;this.src='https://picsum.photos/400/240'" />
+        <div class="tour-info">
+          <div class="tour-header">
+            <span class="tour-id">Tour ID ${this.tourID}</span>
+            <div class="card-admin-actions">
+              <button class="btn-icon btn-edit" onclick="handleUpdate('${this.tourID}')" title="Sửa">✏️</button>
+              <button class="btn-icon btn-delete" onclick="handleDelete('${this.tourID}')" title="Xóa">🗑️</button>
+            </div>
           </div>
-          <div class="actions">
-            <button onclick="handleUpdate('${this.id}')">Update</button>
-            <button onclick="handleDelete('${this.id}')">Delete</button>
-          </div>
+          <h3 class="tour-name">${this.tenTour}</h3>
+          ${descHTML}
+          <div class="tour-date">${dateRange}</div>
+          <div class="tour-price">${formattedPrice}</div>
         </div>
+        <button class="btn-book-full" onclick="handleBook('${this.tourID}')">Đặt Tour</button>
       </div>
     `;
   }
 
-  async Add() {
+  async taoTour() {
     const response = await fetch(API_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        name: this.name,
-        image: this.image,
-        Description: this.Description,
-        quantity: this.quantity,
-        Price: this.Price
+        tenTour: this.tenTour,
+        moTa: this.moTa,
+        ngayKhoiHanh: this.ngayKhoiHanh,
+        ngayKetThuc: this.ngayKetThuc,
+        giaTour: this.giaTour,
+        image: this.image
       })
     });
     return await response.json();
   }
 
-  async Update() {
-    if (!this.id) return;
-    const response = await fetch(`${API_URL}/${this.id}`, {
+  async capNhatTour() {
+    if (!this.tourID) return;
+    const response = await fetch(`${API_URL}/${this.tourID}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        name: this.name,
-        image: this.image,
-        Description: this.Description,
-        quantity: this.quantity,
-        Price: this.Price
+        tenTour: this.tenTour,
+        moTa: this.moTa,
+        ngayKhoiHanh: this.ngayKhoiHanh,
+        ngayKetThuc: this.ngayKetThuc,
+        giaTour: this.giaTour,
+        image: this.image
       })
     });
     return await response.json();
   }
 
-  async Delete() {
-    if (!this.id) return;
-    const response = await fetch(`${API_URL}/${this.id}`, {
+  async xoaTour() {
+    if (!this.tourID) return;
+    const response = await fetch(`${API_URL}/${this.tourID}`, {
       method: 'DELETE'
     });
     return await response.json();
   }
 }
 
-let productList = [];
-const container = document.getElementById('productContainer');
-const productForm = document.getElementById('productForm');
-const modal = document.getElementById('productModal');
-const openModalBtn = document.getElementById('openModalBtn');
-const closeModalBtn = document.getElementById('closeModalBtn');
-const cancelBtn = document.getElementById('cancelBtn');
+let tourList = [];
+const container = document.getElementById('tourContainer');
+const tourForm = document.getElementById('tourForm');
+const searchInput = document.getElementById('searchInput');
 
-async function fetchProducts() {
+const editModal = document.getElementById('editModal');
+const editTourForm = document.getElementById('editTourForm');
+
+function toInputDateFormat(dateStr) {
+  if (!dateStr) return '';
+  const d = new Date(dateStr);
+  if (isNaN(d.getTime())) return '';
+  return d.toISOString().split('T')[0];
+}
+
+async function fetchTours() {
   if (!container) return;
-
   try {
     const response = await fetch(API_URL);
     const data = await response.json();
-    
-    productList = data.map(item => new Product(item)).reverse();
+    tourList = data.map(item => new TourDuLich(item)).reverse();
     render();
   } catch (error) {
-    console.error("Lỗi tải dữ liệu:", error);
-    container.innerHTML = "<p style='grid-column: 1/-1; text-align: center;'>Không thể tải dữ liệu từ API.</p>";
+    console.error('Lỗi tải dữ liệu:', error);
+    container.innerHTML = '<p class="empty-state">Không thể tải dữ liệu từ API. Kiểm tra lại URL MockAPI.</p>';
   }
 }
 
-function render() {
+function render(filteredList = null) {
   if (!container) return;
-  if (productList.length === 0) {
-    container.innerHTML = '<p style="text-align:center; grid-column:1/-1; color: #94a3b8;">Chưa có sản phẩm nào</p>';
+  const list = filteredList || tourList;
+  if (list.length === 0) {
+    container.innerHTML = '<p class="empty-state">Chưa có tour nào</p>';
     return;
   }
-  
-  container.innerHTML = productList.map(product => product.Show()).join('');
+  container.innerHTML = list.map(tour => tour.Show()).join('');
 }
 
-function toggleModal(show = true) {
-  if (show) {
-    modal.classList.remove('hidden');
+function toggleDescription(id, encodedFullText) {
+  const descElem = document.getElementById(`desc-${id}`);
+  if (!descElem) return;
+
+  const fullText = decodeURIComponent(encodedFullText);
+  const isExpanded = descElem.classList.contains('expanded');
+
+  if (isExpanded) {
+    descElem.querySelector('.desc-text').innerText = fullText.substring(0, 80) + '...';
+    descElem.querySelector('.btn-toggle-desc').innerText = 'Xem thêm';
+    descElem.classList.remove('expanded');
   } else {
-    modal.classList.add('hidden');
-    productForm.reset();
+    descElem.querySelector('.desc-text').innerText = fullText + ' ';
+    descElem.querySelector('.btn-toggle-desc').innerText = 'Thu gọn';
+    descElem.classList.add('expanded');
   }
 }
 
-if (openModalBtn) openModalBtn.addEventListener('click', () => toggleModal(true));
-if (closeModalBtn) closeModalBtn.addEventListener('click', () => toggleModal(false));
-if (cancelBtn) cancelBtn.addEventListener('click', () => toggleModal(false));
+function handleSearch() {
+  const keyword = searchInput.value.trim().toLowerCase();
+  if (!keyword) {
+    render();
+    return;
+  }
+  const filtered = tourList.filter(t =>
+    t.tenTour.toLowerCase().includes(keyword) ||
+    t.moTa.toLowerCase().includes(keyword) ||
+    String(t.tourID).includes(keyword)
+  );
+  render(filtered);
+}
 
-window.addEventListener('click', (e) => {
-  if (e.target === modal) toggleModal(false);
-});
-
-// ===== HANDLERS (ADD, UPDATE, DELETE) =====
 async function handleAdd(event) {
   event.preventDefault();
-
-  const newProduct = new Product({
-    name: document.getElementById('name').value.trim(),
+  const newTour = new TourDuLich({
+    tenTour: document.getElementById('tenTour').value.trim(),
     image: document.getElementById('image').value.trim(),
-    Description: document.getElementById('description').value.trim(),
-    quantity: document.getElementById('quantity').value,
-    Price: document.getElementById('price').value
+    moTa: document.getElementById('moTa').value.trim(),
+    ngayKhoiHanh: document.getElementById('ngayKhoiHanh').value,
+    ngayKetThuc: document.getElementById('ngayKetThuc').value,
+    giaTour: document.getElementById('giaTour').value
   });
 
   try {
-    await newProduct.Add();
-    toggleModal(false);
-    fetchProducts();
+    await newTour.taoTour();
+    tourForm.reset();
+    fetchTours();
   } catch (error) {
-    console.error("Lỗi khi thêm sản phẩm:", error);
-    alert("Thêm sản phẩm thất bại!");
+    console.error('Lỗi khi tạo tour:', error);
+    alert('Tạo tour thất bại!');
   }
 }
 
-async function handleUpdate(id) {
-  const product = productList.find(p => p.id === id);
-  if (!product) return;
+function handleUpdate(id) {
+  const tour = tourList.find(t => t.tourID == id);
+  if (!tour) return;
 
-  const newName = prompt("Nhập tên mới cho sản phẩm:", product.name);
-  if (newName && newName.trim() !== '') {
-    product.name = newName.trim();
-    await product.Update();
-    fetchProducts();
+  document.getElementById('editTourID').value = tour.tourID;
+  document.getElementById('editTenTour').value = tour.tenTour;
+  document.getElementById('editImage').value = tour.image;
+  document.getElementById('editMoTa').value = tour.moTa;
+  document.getElementById('editNgayKhoiHanh').value = toInputDateFormat(tour.ngayKhoiHanh);
+  document.getElementById('editNgayKetThuc').value = toInputDateFormat(tour.ngayKetThuc);
+  document.getElementById('editGiaTour').value = tour.giaTour;
+
+  if (editModal) editModal.style.display = 'flex';
+}
+
+function closeEditModal() {
+  if (editModal) editModal.style.display = 'none';
+}
+
+async function handleSaveUpdate(event) {
+  event.preventDefault();
+  const id = document.getElementById('editTourID').value;
+  const tour = tourList.find(t => t.tourID == id);
+  if (!tour) return;
+
+  tour.tenTour = document.getElementById('editTenTour').value.trim();
+  tour.image = document.getElementById('editImage').value.trim();
+  tour.moTa = document.getElementById('editMoTa').value.trim();
+  tour.ngayKhoiHanh = document.getElementById('editNgayKhoiHanh').value;
+  tour.ngayKetThuc = document.getElementById('editNgayKetThuc').value;
+  tour.giaTour = Number(document.getElementById('editGiaTour').value);
+
+  try {
+    await tour.capNhatTour();
+    closeEditModal();
+    fetchTours();
+  } catch (error) {
+    console.error('Lỗi khi cập nhật tour:', error);
+    alert('Cập nhật thất bại!');
   }
 }
 
 async function handleDelete(id) {
-  const product = productList.find(p => p.id === id);
-  if (product && confirm(`Xác nhận xóa sản phẩm "${product.name}"?`)) {
-    await product.Delete();
-    fetchProducts();
+  const tour = tourList.find(t => t.tourID == id);
+  if (tour && confirm(`Xác nhận xóa tour "${tour.tenTour}"?`)) {
+    await tour.xoaTour();
+    fetchTours();
   }
 }
 
-// Event Listeners
-if (productForm) productForm.addEventListener('submit', handleAdd);
-document.addEventListener('DOMContentLoaded', fetchProducts);
+function handleBook(id) {
+  const tour = tourList.find(t => t.tourID == id);
+  if (tour) {
+    alert(`Bạn đã chọn đặt tour:\n${tour.tenTour}\nGiá: ${new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(tour.giaTour)}`);
+  }
+}
+
+if (tourForm) tourForm.addEventListener('submit', handleAdd);
+if (editTourForm) editTourForm.addEventListener('submit', handleSaveUpdate);
+if (searchInput) searchInput.addEventListener('input', handleSearch);
+
+document.addEventListener('DOMContentLoaded', fetchTours);

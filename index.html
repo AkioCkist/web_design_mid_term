@@ -3,34 +3,41 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Quản Lý Sản Phẩm</title>
+  <title>Quản Lý Tour Du Lịch</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-  <!-- Thanh công cụ phía trên -->
-  <div class="top-bar">
-    <h1 class="page-title">Danh Sách Sản Phẩm</h1>
-    <button id="openModalBtn" class="btn-primary">
-      <span>+</span> Add Product
-    </button>
-  </div>
-
-  <!-- Container hiển thị danh sách sản phẩm -->
-  <div id="productContainer" class="product-container"></div>
-
-  <!-- Modal Popup Form -->
-  <div id="productModal" class="modal-overlay hidden">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h2>Add Product</h2>
-        <button id="closeModalBtn" class="close-btn">&times;</button>
+  <div class="app-layout">
+    <aside class="sidebar">
+      <div class="sidebar-search-panel">
+        <p class="sidebar-panel-label">Tìm kiếm tour</p>
+        <div class="search-box sidebar-search">
+          <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="8"></circle>
+            <path d="m21 21-4.35-4.35"></path>
+          </svg>
+          <input type="text" id="searchInput" placeholder="Tìm kiếm tour..." />
+        </div>
       </div>
 
-      <form id="productForm" class="modal-body">
+      <div class="sidebar-form-panel">
+        <div class="sidebar-header">
+          <div class="sidebar-header-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 5v14M5 12h14"></path>
+            </svg>
+          </div>
+          <div>
+            <h2>Thêm tour mới</h2>
+            <p class="sidebar-desc">Điền thông tin để tạo một tour du lịch</p>
+          </div>
+        </div>
+
+        <form id="tourForm" class="add-form">
         <div class="form-group">
-          <label for="name">Tên sản phẩm</label>
-          <input type="text" id="name" placeholder="Nhập tên sản phẩm..." required />
+          <label for="tenTour">Tên tour</label>
+          <input type="text" id="tenTour" placeholder="VD: Tour Du Lịch Hạ Long" required />
         </div>
 
         <div class="form-group">
@@ -39,25 +46,85 @@
         </div>
 
         <div class="form-group">
-          <label for="description">Mô tả sản phẩm</label>
-          <textarea id="description" rows="3" placeholder="Nhập mô tả ngắn..." required></textarea>
+          <label for="moTa">Mô tả</label>
+          <textarea id="moTa" rows="2" placeholder="Mô tả ngắn về tour..." required></textarea>
         </div>
 
         <div class="form-row">
           <div class="form-group">
-            <label for="quantity">Số lượng</label>
-            <input type="number" id="quantity" placeholder="0" min="1" required />
+            <label for="ngayKhoiHanh">Ngày khởi hành</label>
+            <input type="date" id="ngayKhoiHanh" required />
           </div>
-
           <div class="form-group">
-            <label for="price">Giá bán (VND)</label>
-            <input type="number" id="price" placeholder="0" min="0" required />
+            <label for="ngayKetThuc">Ngày kết thúc</label>
+            <input type="date" id="ngayKetThuc" required />
           </div>
         </div>
 
-        <div class="modal-footer">
-          <button type="button" id="cancelBtn" class="btn-secondary">Hủy</button>
-          <button type="submit" id="submitBtn" class="btn-primary">Lưu sản phẩm</button>
+        <div class="form-group">
+          <label for="giaTour">Giá tour (VND)</label>
+          <input type="number" id="giaTour" placeholder="0" min="0" required />
+        </div>
+
+        <button type="submit" id="submitBtn" class="btn-primary btn-full">
+          Tạo Tour
+        </button>
+        </form>
+      </div>
+    </aside>
+
+    <main class="main-content">
+      <div class="top-bar">
+        <h1 class="page-title">Danh Sách Tour Du Lịch</h1>
+      </div>
+
+      <div id="tourContainer" class="tour-container"></div>
+    </main>
+  </div>
+
+  <div id="editModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Cập Nhật Thông Tin Tour</h2>
+        <span class="close-btn" onclick="closeEditModal()">&times;</span>
+      </div>
+      <form id="editTourForm" class="add-form">
+        <input type="hidden" id="editTourID" />
+
+        <div class="form-group">
+          <label for="editTenTour">Tên tour</label>
+          <input type="text" id="editTenTour" required />
+        </div>
+
+        <div class="form-group">
+          <label for="editImage">URL Hình ảnh</label>
+          <input type="url" id="editImage" required />
+        </div>
+
+        <div class="form-group">
+          <label for="editMoTa">Mô tả</label>
+          <textarea id="editMoTa" rows="2" required></textarea>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="editNgayKhoiHanh">Ngày khởi hành</label>
+            <input type="date" id="editNgayKhoiHanh" required />
+          </div>
+          <div class="form-group">
+            <label for="editNgayKetThuc">Ngày kết thúc</label>
+            <input type="date" id="editNgayKetThuc" required />
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="editGiaTour">Giá tour (VND)</label>
+          <input type="number" id="editGiaTour" min="0" required />
+        </div>
+
+        <div class="modal-actions">
+          <button type="button" class="btn-secondary" onclick="closeEditModal()">Hủy</button>
+          <button type="submit" class="btn-primary">Lưu Thay Đổi</button>
         </div>
       </form>
     </div>
